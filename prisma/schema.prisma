@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  notes     Note[]
+  tasks     Task[]
+  createdAt DateTime @default(now())
+}
+
+model Note {
+  id          String      @id @default(cuid())
+  title       String
+  content     String
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+  tags        TagOnNote[]
+  attachments Attachment[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  inbox       Boolean     @default(false)
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  completed   Boolean     @default(false)
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+  tags        TagOnTask[]
+  attachments Attachment[]
+  dueDate     DateTime?
+  habit       Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  url       String
+  note      Note?    @relation(fields: [noteId], references: [id])
+  noteId    String?
+  task      Task?    @relation(fields: [taskId], references: [id])
+  taskId    String?
+  createdAt DateTime @default(now())
+}
+
+model Tag {
+  id    String      @id @default(cuid())
+  name  String      @unique
+  notes TagOnNote[]
+  tasks TagOnTask[]
+}
+
+model TagOnNote {
+  noteId String
+  tagId  String
+  note   Note   @relation(fields: [noteId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+  @@id([noteId, tagId])
+}
+
+model TagOnTask {
+  taskId String
+  tagId  String
+  task   Task   @relation(fields: [taskId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+  @@id([taskId, tagId])
+}
